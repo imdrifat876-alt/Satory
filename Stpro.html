@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MR Ltd - Stardi Point</title>
+<style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+        font-family: 'Arial', sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background-size: 200% 200%;
+        animation: gradientBG 6s ease infinite;
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 20px;
+    }
+    @keyframes gradientBG {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+    }
+    .container {
+        background: white;
+        padding: clamp(20px, 5vw, 40px);
+        border-radius: 25px;
+        box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+        width: 100%;
+        max-width: 550px; /* PC তে বড় হবে না */
+        text-align: center;
+        animation: fadeInUp 1s ease;
+    }
+    @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(40px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    h1 {
+        color: #667eea;
+        font-size: clamp(28px, 8vw, 40px); /* মোবাইলে ছোট, PC তে বড় */
+        margin-bottom: 10px;
+        font-weight: bold;
+        letter-spacing: 2px;
+        animation: glow 2s ease-in-out infinite;
+    }
+    @keyframes glow {
+        0%, 100% { text-shadow: 0 0 10px #667eea; }
+        50% { text-shadow: 0 0 25px #764ba2; }
+    }
+    .subtitle { color: #666; font-size: clamp(14px, 4vw, 18px); margin-bottom: 30px; }
+    .designer {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 15px;
+        border-radius: 15px;
+        font-size: clamp(14px, 3.5vw, 16px);
+        font-weight: bold;
+        margin-bottom: 30px;
+    }
+    .btn {
+        width: 100%;
+        padding: 16px;
+        margin: 12px 0;
+        border: none;
+        border-radius: 15px;
+        font-size: clamp(16px, 4vw, 18px);
+        font-weight: bold;
+        cursor: pointer;
+        transition: 0.3s;
+        color: white;
+    }
+    .btn:hover { transform: scale(1.05); box-shadow: 0 8px 20px rgba(0,0,0,0.3); }
+    .btn-result { background: linear-gradient(135deg, #28a745, #20c997); }
+    .btn-game { background: linear-gradient(135deg, #ff6b6b, #ff8e53); }
+    .btn-calc { background: linear-gradient(135deg, #667eea, #764ba2); }
+    .page { display: none; }
+    .page.active { display: block; animation: popIn 0.5s ease; }
+    @keyframes popIn { 0% { transform: scale(0.9); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+    
+    /* Result CSS */
+    .input-box { margin: 15px 0; text-align: left; }
+    label { display: block; font-weight: bold; color: #333; margin-bottom: 5px; }
+    input {
+        width: 100%; padding: 12px; border: 2px solid #ddd;
+        border-radius: 10px; font-size: 16px;
+    }
+    #resultBox { margin-top: 20px; padding: 20px; border-radius: 10px; background: #f8f9ff; display: none; }
+    .result-item { font-size: 18px; margin: 8px 0; color: #333; }
+    .fail { color: red; font-weight: bold; }
+    .pass { color: green; font-weight: bold; }
+    
+    /* Game CSS - Responsive */
+    #gameBox {
+        width: 100%; 
+        height: 50vh; /* স্ক্রিনের 50% উচ্চতা */
+        max-height: 500px;
+        background: #f0f0f0;
+        border-radius: 15px; 
+        position: relative; 
+        overflow: hidden;
+        margin-top: 15px;
+        touch-action: none; /* মোবাইলে স্ক্রল অফ */
+    }
+    #score { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); font-size: clamp(16px, 5vw, 20px); font-weight: bold; color: #667eea; }
+    #basket {
+        width: 20%; /* স্ক্রিনের 20% */
+        max-width: 100px;
+        height: 20px; 
+        background: linear-gradient(90deg, #667eea, #764ba2);
+        border-radius: 10px; 
+        position: absolute; 
+        bottom: 10px; 
+        left: 50%; 
+        transform: translateX(-50%);
+    }
+    .ball {
+        width: 8%; /* স্ক্রিনের 8% */
+        max-width: 30px;
+        aspect-ratio: 1/1;
+        background: radial-gradient(circle, #ff6b6b, #ff0000);
+        border-radius: 50%; 
+        position: absolute; 
+        top: -30px; 
+        animation: fall 2.5s linear;
+    }
+    @keyframes fall { to { top: 100%; } }
+    
+    /* Calculator CSS */
+    .calc-tabs { display: flex; gap: 8px; margin-bottom: 15px; flex-wrap: wrap; }
+    .tab-btn {
+        flex: 1; min-width: 100px;
+        padding: 10px; border: 2px solid #667eea;
+        background: white; color: #667eea; border-radius: 10px;
+        font-weight: bold; cursor: pointer; font-size: clamp(12px, 3.5vw, 16px);
+    }
+    .tab-btn.active { background: #667eea; color: white; }
+    .calc-section { display: none; }
+    .calc-section.active { display: block; }
+    #decInput {
+        width: 100%; height: 55px; border: 2px solid #ddd;
+        border-radius: 15px; font-size: clamp(18px, 5vw, 22px); text-align: center; margin-bottom: 15px;
+    }
+    .outputBox {
+        width: 100%; padding: 15px; background: #f8f9ff;
+        border: 2px dashed #667eea; border-radius: 15px;
+        font-size: clamp(16px, 4.5vw, 20px); color: #667eea; font-weight: bold; margin-bottom: 15px;
+        word-break: break-all; /* লম্বা বাইনারি ভেঙে যাবে */
+    }
+    .backBtn { background: #666; margin-top: 15px; }
+    .footer { margin-top: 20px; font-size: 12px; color: #999; font-style: italic; }
+
+    /* PC এর জন্য বড় স্ক্রিন */
+    @media (min-width: 768px) {
+        .container { max-width: 600px; }
+        #gameBox { height: 60vh; }
+    }
+</style>
+</head>
+<body>
+
+<div class="container">
+    
+    <!-- 1. HOME PAGE -->
+    <div id="homePage" class="page active">
+        <h1>MR Ltd</h1>
+        <p class="subtitle">⭐ Stardi Point ⭐</p>
+        
+        <div class="designer">
+            ওয়েব সাইট টি ডিজাইন করেছেন<br>
+            ইসতিয়াক মুহাম্মাদ জাকারিয়া
+            </br><br>GOVT.SA. College.khatlal,joypurhat </br><br>class=HSC-Humanities
+              </br><br>roll=71. Sassion=2025-26</br><br>Mobile.01336531504/ B.G=A+</br><br>ID:2514030020071
+        </div>
+
+        <button class="btn btn-result" onclick="showPage('resultPage')">📊 রেজাল্ট দেখুন</button>
+        <button class="btn btn-game" onclick="showPage('gamePage'); startGame();">🎮 গেম খেলুন</button>
+        <button class="btn btn-calc" onclick="showPage('calcPage')">🧮 ক্যালকুলেটর</button>
+        
+        <div class="footer">powered by MR Ltd Team</div>
+    </div>
+
+    <!-- 2. RESULT PAGE -->
+    <div id="resultPage" class="page">
+        <h1 style="font-size: clamp(22px, 6vw, 28px);">রেজাল্ট দেখুন</h1>
+        <div class="input-box"><label>Roll Number:</label><input type="number" id="rollInput" placeholder="যেমন: 15"></div>
+        <div class="input-box"><label>Registration Number:</label><input type="number" id="regInput" placeholder="যেমন: 000015"></div>
+        <button class="btn btn-result" onclick="showResult()">Results দেখুন</button>
+        <div id="resultBox"></div>
+        <button class="btn backBtn" onclick="showPage('homePage')">← হোমে ফিরে যান</button>
+    </div>
+
+    <!-- 3. GAME PAGE -->
+    <div id="gamePage" class="page">
+        <h1 style="font-size: clamp(22px, 6vw, 28px);">Ball Catch Game</h1>
+        <div id="gameBox">
+            <div id="score">Score: 0</div>
+            <div id="basket"></div>
+            <div id="gameOver" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:white;padding:20px;border-radius:15px;display:none;">
+                <h2>Game Over!</h2><p>Score: <span id="finalScore">0</span></p>
+                <button class="btn btn-game" onclick="restartGame()">আবার খেলুন</button>
+            </div>
+        </div>
+        <button class="btn backBtn" onclick="showPage('homePage'); stopGame();">← হোমে ফিরে যান</button>
+    </div>
+
+    <!-- 4. CALCULATOR PAGE -->
+    <div id="calcPage" class="page">
+        <h1 style="font-size: clamp(22px, 6vw, 28px);">কনভার্টার ক্যালকুলেটর</h1>
+        
+        <div class="calc-tabs">
+            <button class="tab-btn active" onclick="showTab('octal')">Octal</button>
+            <button class="tab-btn" onclick="showTab('binary')">Binary</button>
+            <button class="tab-btn" onclick="showTab('hex')">Hexadecimal</button>
+        </div>
+        
+        <input type="number" id="decInput" placeholder="দশমিক সংখ্যা লিখুন" oninput="convertAll()">
+        
+        <div id="octal" class="calc-section active"><div class="outputBox">অকটাল: <span id="octalOut">0</span></div></div>
+        <div id="binary" class="calc-section"><div class="outputBox">বাইনারি: <span id="binaryOut">0</span></div></div>
+        <div id="hex" class="calc-section"><div class="outputBox">হেক্সাডেসিমেল: <span id="hexOut">0</span></div></div>
+        
+        <button class="btn btn-calc" onclick="clearCalc()">Clear</button>
+        <button class="btn backBtn" onclick="showPage('homePage')">← হোমে ফিরে যান</button>
+    </div>
+
+</div>
+
+<script>
+// PAGE SWITCH
+function showPage(pageId){
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.getElementById(pageId).classList.add('active');
+}
+
+// RESULT DATA
+const students = [
+{reg:"000001", roll:"1", result:"5.00", name:"Jui"},{reg:"000002", roll:"2", result:"4.00", name:"rifat"},{reg:"000003", roll:"3", result:"4.00", name:"Forad"},{reg:"000004", roll:"4", result:"2.00", name:"topu"},{reg:"000005", roll:"5", result:"3.00", name:"Anika"},{reg:"000015", roll:"15", result:"4.82", name:"soli"},{reg:"000030", roll:"30", result:"4.04", name:"Habiba"}
+];
+function showResult(){
+    const roll = document.getElementById('rollInput').value.trim();
+    const reg = document.getElementById('regInput').value.trim();
+    const resultBox = document.getElementById('resultBox');
+    const student = students.find(s => s.roll === roll && s.reg === reg);
+    if(student){
+        let resultClass = student.result === "Fall" ? "fail" : "pass";
+        resultBox.innerHTML = `<div class="result-item"><b>Name:</b> ${student.name}</div><div class="result-item"><b>Roll:</b> ${student.roll}</div><div class="result-item"><b>Reg:</b> ${student.reg}</div><div class="result-item"><b>Result:</b> <span class="${resultClass}">${student.result}</span></div>`;
+        resultBox.style.display = "block";
+    } else {
+        resultBox.innerHTML = `<div class="result-item fail">❌ Roll এবং Registration মিলছে না।</div>`;
+        resultBox.style.display = "block";
+    }
+}
+
+// GAME CODE - Mouse + Touch 2টাই সাপোর্ট
+let score = 0, gameRunning = false, ballInterval;
+const gameBox = document.getElementById('gameBox');
+const basket = document.getElementById('basket');
+gameBox.addEventListener('touchmove', moveBasket);
+gameBox.addEventListener('mousemove', moveBasket);
+function moveBasket(e){
+    if(!gameRunning) return;
+    let x = e.touches ? e.touches[0].clientX : e.clientX;
+    let boxRect = gameBox.getBoundingClientRect();
+    let basketWidth = basket.offsetWidth;
+    let basketX = x - boxRect.left - basketWidth/2;
+    if(basketX < 0) basketX = 0;
+    if(basketX > boxRect.width - basketWidth) basketX = boxRect.width - basketWidth;
+    basket.style.left = basketX + 'px';
+}
+function createBall(){
+    if(!gameRunning) return;
+    const ball = document.createElement('div');
+    ball.classList.add('ball');
+    ball.style.left = Math.random() * (gameBox.clientWidth - 30) + 'px';
+    gameBox.appendChild(ball);
+    ball.addEventListener('animationend', () => { if(gameRunning) endGame(); ball.remove(); });
+    const check = setInterval(() => {
+        let ballRect = ball.getBoundingClientRect();
+        let basketRect = basket.getBoundingClientRect();
+        if(ballRect.bottom >= basketRect.top && ballRect.left < basketRect.right && ballRect.right > basketRect.left){
+            score++; document.getElementById('score').innerText = "Score: " + score;
+            ball.remove(); clearInterval(check);
+        }
+        if(!document.body.contains(ball)) clearInterval(check);
+    }, 50);
+}
+function startGame(){
+    score = 0; gameRunning = true;
+    document.getElementById('score').innerText = "Score: 0";
+    document.getElementById('gameOver').style.display = 'none';
+    ballInterval = setInterval(createBall, 900);
+}
+function stopGame(){
+    gameRunning = false; clearInterval(ballInterval);
+    document.querySelectorAll('.ball').forEach(b => b.remove());
+}
+function endGame(){
+    gameRunning = false; clearInterval(ballInterval);
+    document.getElementById('finalScore').innerText = score;
+    document.getElementById('gameOver').style.display = 'block';
+}
+function restartGame(){ startGame(); }
+
+// CALCULATOR CODE
+function showTab(tabName){
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.calc-section').forEach(s => s.classList.remove('active'));
+    event.target.classList.add('active');
+    document.getElementById(tabName).classList.add('active');
+}
+function convertAll(){
+    let dec = document.getElementById('decInput').value;
+    if(dec === '') dec = 0;
+    dec = parseInt(dec);
+    document.getElementById('octalOut').innerText = dec.toString(8);
+    document.getElementById('binaryOut').innerText = dec.toString(2);
+    document.getElementById('hexOut').innerText = dec.toString(16).toUpperCase();
+}
+function clearCalc(){
+    document.getElementById('decInput').value = '';
+    convertAll();
+}
+</script>
+
+</body>
+</html>
